@@ -726,7 +726,8 @@ def find_connections(addresses, chain, limit):
     wallet_txs = {}
     for addr in addresses:
         print(f"[-] Fetching {get_label(addr)}...")
-        wallet_txs[addr] = analyze_wallet(addr, chain, limit)
+        df, _ = analyze_wallet(addr, chain, limit)  # Unpack tuple, ignore tx_details_list
+        wallet_txs[addr] = df
     
     connections = {}
     for i, a in enumerate(addresses):

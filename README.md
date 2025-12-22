@@ -101,20 +101,26 @@ app = FastAPI()
 @app.get("/profile/{address}")
 def get_profile(address: str):
     # 1. Run the analysis logic
-    df = analyze_wallet(address)
+    # Note: For EVM, analyze_wallet returns (df, tx_details_list)
+    df, tx_details_list = analyze_wallet(address)  # EVM
+    # df = analyze_wallet(address)  # Solana (single return)
     
     # 2. Process metrics
     hourly_counts = [0] * 24
+    daily_counts = [0] * 7
     for _, row in df.iterrows():
         hourly_counts[row["hour"]] += 1
+        daily_counts[row["day_of_week"]] += 1
         
     sleep = detect_sleep_window(hourly_counts)
-    probs = calculate_probabilities(df, ... )
+    reaction = analyze_reaction_speed(address, tx_details_list)  # Add reaction analysis
+    probs = calculate_probabilities(df, hourly_counts, daily_counts, sleep, reaction)
     
     # 3. Return JSON for your frontend
     return {
         "probabilities": probs.__dict__,
         "sleep_window": sleep.__dict__,
+        "reaction_speed": reaction.__dict__,  # Add reaction speed data
         "transactions": df.to_dict(orient="records")
     }
 
@@ -145,13 +151,18 @@ def get_profile(address: str):
 * **Component:** Radar Chart or Progress Bars.
 * **Goal:** Show the likelihood of the entity being a Bot vs. Human.
 
+#### Panel 4: Reaction Speed Analysis (Bar Chart)* **Data Source:** `reaction` object from `analyze_reaction_speed()`.
+* **Component:** Bar Chart showing Instant/Fast/Human reaction distribution.
+* **Goal:** Visualize bot detection metrics with bot confidence score.
+* **Available for:** Both Solana and EVM chains.
+
 ---
 
-## ⚡ NEW: Reaction Speed Analysis (Bot Detection)
+## ⚡ Reaction Speed Analysis (Bot Detection)
 
-**Solana Only (Currently)**
+**Available for both Solana and EVM chains**
 
-Gator now includes advanced reaction speed analysis to detect bots with high precision. The algorithm measures the time between **receiving tokens** and **taking action** (selling, swapping, transferring).
+Gator includes advanced reaction speed analysis to detect bots with high precision. The algorithm measures the time between **receiving tokens/ETH** and **taking action** (selling, swapping, transferring). This works for both native tokens and ERC20 token transfers on EVM chains.
 
 ### How It Works:
 1. **Analyzes consecutive transactions** to find "receive → action" patterns
@@ -169,17 +180,17 @@ Gator now includes advanced reaction speed analysis to detect bots with high pre
 
 ### Example Output:
 ```
-⚡ REACTION SPEED ANALYSIS (Bot Detection)
-─────────────────────────────────────────────────────────────────────
-├─ Reaction Pairs:     15
-├─ Avg Reaction:       2.43s
-├─ Median Reaction:    1.80s
-├─ Fastest Reaction:   0.50s
-├─ Instant (<5s):      12 (80.0%)
-├─ Fast (5-30s):       2 (13.3%)
-├─ Human (>30s):       1 (6.7%)
-└─ Bot Confidence:     95.0%
-   ⚠️  HIGH BOT PROBABILITY: Average reaction 2.4s
+REACTION SPEED ANALYSIS (Bot Detection)
+----------------------------------------------------------------------
+Reaction Pairs:     64
+Avg Reaction:       17.44s
+Median Reaction:    12.00s
+Fastest Reaction:   0.00s
+Instant (<5s):      4 (6.2%)
+Fast (5-30s):       57 (89.1%)
+Human (>30s):       3 (4.7%)
+Bot Confidence:    70.0%
+[WARNING] HIGH BOT PROBABILITY: Average reaction 17.4s
 ```
 
 ### Use Cases:
@@ -223,14 +234,14 @@ KNOWN_LABELS = {
 
 ```
 
-### 4. Adjusting Reaction Speed ThresholdsYou can customize the bot detection thresholds in the `analyze_reaction_speed()` function:
+### 4. Adjusting Reaction Speed ThresholdsYou can customize the bot detection thresholds in the `analyze_reaction_speed()` function in both `gator_solana.py` and `gator_evm.py`:
 
 ```python
-# In gator_solana.py, around line 280
 # Current thresholds:
 # - Instant: < 5 seconds
 # - Fast: 5-30 seconds  
 # - Human: > 30 seconds
+# - Analysis window: 1 hour (reactions beyond are excluded)
 
 # Make it more strict (only flag super-fast bots):
 if time_delta < 2:  # Instead of 5
@@ -239,7 +250,13 @@ if time_delta < 2:  # Instead of 5
 # Or adjust the bot confidence calculation:
 if instant_ratio > 0.5:  # Instead of 0.7
     bot_confidence = 95.0
+
+# Change analysis window (default is 3600 seconds = 1 hour):
+if time_delta > 1800:  # 30 minutes instead of 1 hour
+    break
 ```
+
+**Note for EVM**: The analysis includes both regular ETH transactions and ERC20 token transfers. Token transfers are automatically detected and included in the reaction speed analysis.
 
 ---
 

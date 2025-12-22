@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GATOR - Blockchain Intelligence</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>GATOR - Blockchain Intelligence v4.0</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -61,9 +64,14 @@
             gap: 15px;
         }
 
-        .logo img {
-            height: 50px;
-            width: auto;
+        .logo-icon {
+            font-size: 48px;
+        }
+
+        .logo-text h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #10b981;
         }
 
         .badge {
@@ -151,6 +159,77 @@
             background: #374151;
             cursor: not-allowed;
             transform: none;
+        }
+
+        /* Limit Controls */
+        .limit-controls {
+            margin-top: 25px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .limit-controls label {
+            display: block;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        #limit-display {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .limit-inputs {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .limit-slider {
+            flex: 1;
+            height: 6px;
+            background: rgba(30, 30, 30, 0.9);
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .limit-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .limit-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .limit-number {
+            width: 90px;
+            padding: 10px;
+            background: rgba(25, 25, 25, 0.9);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            color: #f9fafb;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .limit-number:focus {
+            outline: none;
+            border-color: #3b82f6;
         }
 
         .disclaimer {
@@ -270,6 +349,13 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 16px;
             padding: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.1);
+            transform: translateY(-2px);
         }
 
         .card-header {
@@ -284,9 +370,11 @@
         }
 
         .card-title {
-            font-size: 18px;
-            font-weight: 600;
+            font-size: 16px;
+            font-weight: 700;
             color: #f9fafb;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         /* Chart Container */
@@ -301,8 +389,16 @@
 
         /* Profile Classification */
         .profile-bar {
-            margin-bottom: 15px;
+            margin-bottom: 16px;
+            opacity: 0;
+            animation: fadeInUp 0.5s ease-out forwards;
         }
+
+        .profile-bar:nth-child(1) { animation-delay: 0.1s; }
+        .profile-bar:nth-child(2) { animation-delay: 0.15s; }
+        .profile-bar:nth-child(3) { animation-delay: 0.2s; }
+        .profile-bar:nth-child(4) { animation-delay: 0.25s; }
+        .profile-bar:nth-child(5) { animation-delay: 0.3s; }
 
         .profile-header {
             display: flex;
@@ -322,9 +418,9 @@
         }
 
         .profile-bar-bg {
-            height: 32px;
+            height: 36px;
             background: rgba(30, 30, 30, 0.6);
-            border-radius: 8px;
+            border-radius: 10px;
             overflow: hidden;
         }
 
@@ -332,30 +428,52 @@
             height: 100%;
             display: flex;
             align-items: center;
-            padding-left: 12px;
-            font-size: 13px;
+            padding-left: 15px;
+            font-size: 14px;
             font-weight: 600;
-            transition: width 1s ease-out;
+            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            animation: shimmer 3s infinite;
         }
 
         .profile-bar-fill.blue {
             background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
         }
 
         .profile-bar-fill.green {
             background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
         }
 
         .profile-bar-fill.orange {
             background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
         }
 
         .profile-bar-fill.red {
             background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
         }
 
         .profile-bar-fill.purple {
             background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+        }
+
+        .profile-bar:hover .profile-bar-fill {
+            filter: brightness(1.1);
         }
 
         /* Key Insights */
@@ -371,6 +489,193 @@
             margin-bottom: 12px;
             font-size: 14px;
             line-height: 1.6;
+        }
+
+        /* Legend Styles */
+        .chart-legend {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(25, 25, 25, 0.6);
+            border-radius: 8px;
+            font-size: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 5px 0;
+            color: #9ca3af;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.2s ease;
+        }
+
+        .metric-row:hover {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: #9ca3af;
+            font-size: 13px;
+        }
+
+        .metric-value {
+            color: #e5e7eb;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .metric-value.highlight {
+            color: #3b82f6;
+        }
+
+        /* Behavioral Bars */
+        .behavior-bar {
+            margin-bottom: 20px;
+            opacity: 0;
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .behavior-bar:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .behavior-bar:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .behavior-bar:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .behavior-bar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .behavior-bar-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e5e7eb;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .behavior-bar-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #f9fafb;
+        }
+
+        .behavior-bar-track {
+            height: 40px;
+            background: rgba(30, 30, 30, 0.6);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .behavior-bar-fill {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 15px;
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, filter 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .behavior-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                left: -100%;
+            }
+            100% {
+                left: 200%;
+            }
+        }
+
+        .behavior-bar-fill.bot-bar {
+            background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+
+        .behavior-bar-fill.whale-bar {
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .behavior-bar-fill.degen-bar {
+            background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+        }
+
+        .behavior-bar:hover .behavior-bar-fill {
+            box-shadow: 0 0 30px currentColor;
+            filter: brightness(1.1);
+        }
+
+        .behavior-bar-icon {
+            font-size: 18px;
+            margin-right: 8px;
+        }
+
+        .sleep-info {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+
+        .sleep-info strong {
+            color: #ef4444;
         }
 
         /* Responsive */
@@ -402,7 +707,10 @@
         <!-- Header -->
         <div class="header">
             <div class="logo">
-                <img src="/static/gator-logo.png" alt="GATOR">
+                <div class="logo-icon">🐊</div>
+                <div class="logo-text">
+                    <h1>GATOR</h1>
+                </div>
             </div>
             <div class="badge">
                 <span>🔒</span>
@@ -422,10 +730,33 @@
                     id="wallet-input"
                     placeholder="5mv1uyHdbqYrzhCdUzt7caxbWuyg1LQCWn4ngCd6zRDttL6TnLofu1RysYw1fGpbfA8aHdx5vT9r1"
                     value="">
-                <button class="search-btn" id="analyze-btn" onclick="analyzeWallet()">
+                <button class="search-btn" id="analyze-btn">
                     <span>🔍</span>
                     <span>Analyze</span>
                 </button>
+            </div>
+
+            <div class="limit-controls">
+                <label for="tx-limit-slider">Transaction Limit: <span id="limit-display">200</span></label>
+                <div class="limit-inputs">
+                    <input 
+                        type="range" 
+                        id="tx-limit-slider" 
+                        class="limit-slider"
+                        min="50" 
+                        max="1000" 
+                        value="200" 
+                        step="50"
+                        oninput="document.getElementById('limit-display').textContent=this.value; document.getElementById('tx-limit-input').value=this.value;">
+                    <input 
+                        type="number" 
+                        id="tx-limit-input" 
+                        class="limit-number"
+                        min="50" 
+                        max="1000" 
+                        value="200"
+                        oninput="var v=Math.max(50,Math.min(1000,parseInt(this.value)||200)); document.getElementById('tx-limit-slider').value=v; document.getElementById('limit-display').textContent=v; this.value=v;">
+                </div>
             </div>
 
             <div class="disclaimer">
@@ -468,10 +799,28 @@
                 <div class="card">
                     <div class="card-header">
                         <span class="card-icon">🕒</span>
-                        <span class="card-title">Activity Pattern (24h)</span>
+                        <span class="card-title">Circadian Rhythm</span>
                     </div>
                     <div class="chart-container">
                         <canvas id="activity-chart"></canvas>
+                    </div>
+                    <div class="chart-legend" id="activity-legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #3b82f6;"></div>
+                            <span>Active Hours - Normal activity</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #ef4444;"></div>
+                            <span>Sleep Window - Detected rest period</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #22c55e;"></div>
+                            <span>Peak Hour - Maximum activity</span>
+                        </div>
+                        <div class="sleep-info" id="sleep-window-info">
+                            <strong>Sleep Window:</strong> <span id="sleep-hours">--:-- to --:--</span> UTC<br>
+                            <strong>Confidence:</strong> <span id="sleep-confidence">--%</span>
+                        </div>
                     </div>
                 </div>
 
@@ -479,10 +828,28 @@
                 <div class="card">
                     <div class="card-header">
                         <span class="card-icon">🌍</span>
-                        <span class="card-title">Geographic Origin</span>
+                        <span class="card-title">Geographic Probability</span>
                     </div>
                     <div class="chart-container">
                         <canvas id="geographic-chart"></canvas>
+                    </div>
+                    <div class="chart-legend">
+                        <div class="metric-row">
+                            <span class="metric-label">Asia/Pacific</span>
+                            <span class="metric-value" id="geo-asia">--%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Europe</span>
+                            <span class="metric-value" id="geo-europe">--%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Americas</span>
+                            <span class="metric-value" id="geo-americas">--%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Primary Region</span>
+                            <span class="metric-value highlight" id="geo-primary">--</span>
+                        </div>
                     </div>
                 </div>
 
@@ -490,48 +857,124 @@
                 <div class="card">
                     <div class="card-header">
                         <span class="card-icon">📅</span>
-                        <span class="card-title">Weekly Pattern</span>
+                        <span class="card-title">Weekly Routine</span>
                     </div>
                     <div class="chart-container">
                         <canvas id="weekly-chart"></canvas>
+                    </div>
+                    <div class="chart-legend">
+                        <div class="metric-row">
+                            <span class="metric-label">Weekend Ratio</span>
+                            <span class="metric-value highlight" id="weekend-ratio">--x</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Classification</span>
+                            <span class="metric-value" id="activity-type">--</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Total Weekly Transactions</span>
+                            <span class="metric-value" id="weekly-total">--</span>
+                        </div>
+                        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1);">
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: #3b82f6;"></div>
+                                <span>Weekdays (Mon-Fri) - Professional hours</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: #f59e0b;"></div>
+                                <span>Weekends (Sat-Sun) - Retail pattern indicator</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Trader Classification -->
                 <div class="card">
                     <div class="card-header">
-                        <span class="card-icon">📊</span>
-                        <span class="card-title">Trader Classification</span>
+                        <span class="card-icon">💼</span>
+                        <span class="card-title">Occupation Probability</span>
                     </div>
                     <div class="chart-container">
                         <canvas id="trader-chart"></canvas>
                     </div>
+                    <div class="chart-legend">
+                        <div class="metric-row">
+                            <span class="metric-label">Professional</span>
+                            <span class="metric-value" id="trader-pro">--%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Retail</span>
+                            <span class="metric-value" id="trader-retail">--%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Institutional</span>
+                            <span class="metric-value" id="trader-inst">--%</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Transaction Complexity -->
+            <!-- Behavioral Complexity -->
             <div class="grid single">
                 <div class="card">
                     <div class="card-header">
                         <span class="card-icon">⚡</span>
-                        <span class="card-title">Transaction Complexity</span>
+                        <span class="card-title">Behavioral Complexity</span>
                     </div>
                     <div class="chart-container">
                         <canvas id="complexity-chart"></canvas>
+                    </div>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #22c55e;"></div>
+                            <span>Simple (&lt;50K CU) - Basic transfers</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #3b82f6;"></div>
+                            <span>Moderate (50-200K CU) - Standard swaps & DeFi</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #f59e0b;"></div>
+                            <span>Complex (200-500K CU) - Advanced strategies</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #ef4444;"></div>
+                            <span>Heavy (&gt;500K CU) - High-frequency/MEV bots</span>
+                        </div>
+                        <div class="metric-row" style="margin-top: 10px;">
+                            <span class="metric-label">Average Complexity</span>
+                            <span class="metric-value highlight" id="avg-complexity">-- CU</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Complexity Rating</span>
+                            <span class="metric-value" id="complexity-rating">--</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Risk & Insights -->
             <div class="grid">
-                <!-- Risk Assessment -->
+                <!-- Behavioral Profile -->
                 <div class="card">
                     <div class="card-header">
-                        <span class="card-icon">🛡️</span>
-                        <span class="card-title">Risk Assessment</span>
+                        <span class="card-icon">🤖</span>
+                        <span class="card-title">Behavioral Profile</span>
                     </div>
-                    <div class="chart-container small">
-                        <canvas id="risk-chart"></canvas>
+                    <div id="behavioral-bars"></div>
+                    <div class="chart-legend" style="margin-top: 20px;">
+                        <div class="metric-row">
+                            <span class="metric-label">Avg Complexity</span>
+                            <span class="metric-value highlight" id="behavior-complexity">-- CU</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Fail Rate</span>
+                            <span class="metric-value" id="behavior-fail-rate">--%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Profile Type</span>
+                            <span class="metric-value" id="behavior-type">--</span>
+                        </div>
                     </div>
                 </div>
 
@@ -564,6 +1007,7 @@
 
         async function analyzeWallet() {
             const wallet = document.getElementById('wallet-input').value.trim();
+            const limit = parseInt(document.getElementById('tx-limit-input').value) || 200;
             
             if (!wallet) {
                 alert('Please enter a wallet address');
@@ -582,7 +1026,7 @@
                 const response = await fetch(`${API_BASE}/analyze-wallet`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ wallet })
+                    body: JSON.stringify({ wallet, limit })
                 });
 
                 if (!response.ok) {
@@ -612,6 +1056,75 @@
                 data.wallet.substring(0, 8) + '...' + data.wallet.substring(data.wallet.length - 4);
             document.getElementById('confidence-display').textContent = data.confidence;
             document.getElementById('tx-count-display').textContent = data.total_transactions.toLocaleString();
+
+            // Update sleep window info
+            document.getElementById('sleep-hours').textContent = 
+                `${String(data.sleep_window.start_hour).padStart(2, '0')}:00 to ${String(data.sleep_window.end_hour).padStart(2, '0')}:00`;
+            document.getElementById('sleep-confidence').textContent = data.sleep_window.confidence.toFixed(1) + '%';
+
+            // Update geographic data
+            const geoData = data.geographic_origin;
+            document.getElementById('geo-asia').textContent = geoData.asia_pacific.toFixed(1) + '%';
+            document.getElementById('geo-europe').textContent = geoData.europe.toFixed(1) + '%';
+            document.getElementById('geo-americas').textContent = geoData.americas.toFixed(1) + '%';
+            
+            const geoMax = Math.max(geoData.asia_pacific, geoData.europe, geoData.americas);
+            let primaryRegion = 'Unknown';
+            if (geoMax === geoData.asia_pacific) primaryRegion = 'Asia/Pacific';
+            else if (geoMax === geoData.europe) primaryRegion = 'Europe';
+            else if (geoMax === geoData.americas) primaryRegion = 'Americas';
+            document.getElementById('geo-primary').textContent = primaryRegion;
+
+            // Update weekly pattern data
+            const weekendTx = data.activity_pattern.daily[5] + data.activity_pattern.daily[6];
+            const weekdayTx = data.activity_pattern.daily.slice(0, 5).reduce((a, b) => a + b, 0);
+            const totalWeekly = weekendTx + weekdayTx;
+            const weekendRatio = weekdayTx > 0 ? ((weekendTx / 2) / (weekdayTx / 5)).toFixed(2) : '0.00';
+            document.getElementById('weekend-ratio').textContent = weekendRatio + 'x';
+            document.getElementById('weekly-total').textContent = totalWeekly.toLocaleString();
+            
+            let activityType = 'Professional';
+            if (weekendRatio > 1.3) {
+                activityType = 'Retail/Hobbyist';
+            } else if (weekendRatio >= 0.6 && weekendRatio <= 1.3) {
+                activityType = 'Mixed (Work & Leisure)';
+            }
+            document.getElementById('activity-type').textContent = activityType;
+
+            // Update trader classification data
+            const traderData = data.trader_classification;
+            document.getElementById('trader-pro').textContent = traderData.professional.toFixed(1) + '%';
+            document.getElementById('trader-retail').textContent = traderData.retail.toFixed(1) + '%';
+            document.getElementById('trader-inst').textContent = traderData.institutional.toFixed(1) + '%';
+
+            // Update complexity data
+            const avgCU = data.transaction_complexity.reduce((sum, tx) => sum + tx.compute_units, 0) / data.transaction_complexity.length;
+            document.getElementById('avg-complexity').textContent = avgCU.toFixed(0).toLocaleString() + ' CU';
+            
+            // Determine complexity rating
+            let complexityRating = 'Low';
+            if (avgCU > 500000) {
+                complexityRating = 'Very High (Bot-like)';
+            } else if (avgCU > 200000) {
+                complexityRating = 'High (Advanced)';
+            } else if (avgCU > 50000) {
+                complexityRating = 'Moderate (Standard)';
+            }
+            document.getElementById('complexity-rating').textContent = complexityRating;
+
+            // Update behavioral profile data
+            const profiles = data.profile_classification;
+            const failRate = ((data.total_transactions - data.activity_pattern.hourly.reduce((a, b) => a + b, 0)) / data.total_transactions * 100) || 0;
+            
+            document.getElementById('behavior-complexity').textContent = avgCU.toFixed(0).toLocaleString() + ' CU';
+            document.getElementById('behavior-fail-rate').textContent = failRate.toFixed(1) + '%';
+            
+            // Determine primary profile type
+            let profileType = 'Human Trader';
+            if (profiles.bot > 60) profileType = 'Bot/Automated';
+            else if (profiles.whale > 60) profileType = 'Whale/Institutional';
+            else if (profiles.airdrop_farmer > 60) profileType = 'High-Risk/Degen';
+            document.getElementById('behavior-type').textContent = profileType;
 
             // Destroy old charts
             Object.values(charts).forEach(chart => chart.destroy());
@@ -731,29 +1244,46 @@
                 }
             });
 
-            // Transaction Complexity Chart
+            // Behavioral Complexity Chart
             const complexityData = data.transaction_complexity;
+            
+            // Categorize by compute units
+            const simpleData = complexityData.filter(t => t.compute_units < 50000).map(t => ({ x: t.hour, y: t.compute_units }));
+            const moderateData = complexityData.filter(t => t.compute_units >= 50000 && t.compute_units < 200000).map(t => ({ x: t.hour, y: t.compute_units }));
+            const complexData = complexityData.filter(t => t.compute_units >= 200000 && t.compute_units < 500000).map(t => ({ x: t.hour, y: t.compute_units }));
+            const heavyData = complexityData.filter(t => t.compute_units >= 500000).map(t => ({ x: t.hour, y: t.compute_units }));
+            
             charts.complexity = new Chart(document.getElementById('complexity-chart'), {
                 type: 'scatter',
                 data: {
                     datasets: [
                         {
-                            label: 'Complex',
-                            data: complexityData.filter(t => t.type === 'Complex').map(t => ({ x: t.hour, y: t.compute_units })),
-                            backgroundColor: '#8b5cf6',
-                            pointRadius: 6
+                            label: 'Simple (<50K)',
+                            data: simpleData,
+                            backgroundColor: '#22c55e',
+                            pointRadius: 5,
+                            pointHoverRadius: 7
                         },
                         {
-                            label: 'Jito Bundle',
-                            data: complexityData.filter(t => t.type === 'Jito Bundle').map(t => ({ x: t.hour, y: t.compute_units })),
-                            backgroundColor: '#a855f7',
-                            pointRadius: 6
-                        },
-                        {
-                            label: 'Standard',
-                            data: complexityData.filter(t => t.type === 'Standard').map(t => ({ x: t.hour, y: t.compute_units })),
+                            label: 'Moderate (50-200K)',
+                            data: moderateData,
                             backgroundColor: '#3b82f6',
-                            pointRadius: 5
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        },
+                        {
+                            label: 'Complex (200-500K)',
+                            data: complexData,
+                            backgroundColor: '#f59e0b',
+                            pointRadius: 7,
+                            pointHoverRadius: 9
+                        },
+                        {
+                            label: 'Heavy (>500K)',
+                            data: heavyData,
+                            backgroundColor: '#ef4444',
+                            pointRadius: 8,
+                            pointHoverRadius: 10
                         }
                     ]
                 },
@@ -761,56 +1291,85 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { color: '#9ca3af', padding: 15 }
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Hour ${context.parsed.x}: ${context.parsed.y.toLocaleString()} CU`;
+                                }
+                            }
                         }
                     },
                     scales: {
                         x: { 
+                            title: {
+                                display: true,
+                                text: 'Hour (UTC)',
+                                color: '#9ca3af'
+                            },
                             grid: { color: 'rgba(255,255,255,0.05)' },
                             ticks: { color: '#9ca3af' },
-                            max: 24
+                            min: 0,
+                            max: 23
                         },
                         y: { 
+                            title: {
+                                display: true,
+                                text: 'Compute Units',
+                                color: '#9ca3af'
+                            },
                             grid: { color: 'rgba(255,255,255,0.05)' },
-                            ticks: { color: '#9ca3af' }
+                            ticks: { 
+                                color: '#9ca3af',
+                                callback: function(value) {
+                                    return value >= 1000 ? (value/1000).toFixed(0) + 'K' : value;
+                                }
+                            }
                         }
                     }
                 }
             });
 
-            // Risk Assessment Chart
-            charts.risk = new Chart(document.getElementById('risk-chart'), {
-                type: 'bar',
-                data: {
-                    labels: ['Low Risk', 'Medium Risk', 'High Risk'],
-                    datasets: [{
-                        data: [
-                            data.risk_assessment.low_risk,
-                            data.risk_assessment.medium_risk,
-                            data.risk_assessment.high_risk
-                        ],
-                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { 
-                            grid: { color: 'rgba(255,255,255,0.05)' },
-                            ticks: { color: '#9ca3af' }
-                        },
-                        y: { 
-                            grid: { color: 'rgba(255,255,255,0.05)' },
-                            ticks: { color: '#9ca3af' }
-                        }
-                    }
-                }
-            });
+            // Behavioral Profile Bars
+            const behavioralHTML = `
+                <div class="behavior-bar">
+                    <div class="behavior-bar-header">
+                        <div class="behavior-bar-label">
+                            <span class="behavior-bar-icon">🤖</span>
+                            Bot (Automated)
+                        </div>
+                        <div class="behavior-bar-value">${profiles.bot.toFixed(1)}%</div>
+                    </div>
+                    <div class="behavior-bar-track">
+                        <div class="behavior-bar-fill bot-bar" style="width: ${profiles.bot}%"></div>
+                    </div>
+                </div>
+                <div class="behavior-bar">
+                    <div class="behavior-bar-header">
+                        <div class="behavior-bar-label">
+                            <span class="behavior-bar-icon">🐋</span>
+                            Whale Probability
+                        </div>
+                        <div class="behavior-bar-value">${profiles.whale.toFixed(1)}%</div>
+                    </div>
+                    <div class="behavior-bar-track">
+                        <div class="behavior-bar-fill whale-bar" style="width: ${profiles.whale}%"></div>
+                    </div>
+                </div>
+                <div class="behavior-bar">
+                    <div class="behavior-bar-header">
+                        <div class="behavior-bar-label">
+                            <span class="behavior-bar-icon">🎰</span>
+                            Degen/High-Risk
+                        </div>
+                        <div class="behavior-bar-value">${(profiles.airdrop_farmer * 2).toFixed(1)}%</div>
+                    </div>
+                    <div class="behavior-bar-track">
+                        <div class="behavior-bar-fill degen-bar" style="width: ${profiles.airdrop_farmer * 2}%"></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('behavioral-bars').innerHTML = behavioralHTML;
 
             // Key Insights
             const insightsList = document.getElementById('insights-list');
@@ -819,7 +1378,6 @@
             ).join('');
 
             // Profile Classification
-            const profiles = data.profile_classification;
             const profileHTML = `
                 <div class="profile-bar">
                     <div class="profile-header">
@@ -873,12 +1431,33 @@
             document.getElementById('results').classList.add('show');
         }
 
-        // Allow Enter key to trigger analysis
-        document.getElementById('wallet-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
+        // Setup event listeners (script is at end of body, DOM is ready)
+        console.log('Setting up event listeners');
+        
+        // Button click handler
+        const analyzeBtn = document.getElementById('analyze-btn');
+        console.log('Analyze button found:', analyzeBtn);
+        if (analyzeBtn) {
+            analyzeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Analyze button clicked!');
                 analyzeWallet();
-            }
-        });
+            });
+        } else {
+            console.error('Analyze button not found!');
+        }
+
+        // Allow Enter key to trigger analysis
+        const walletInput = document.getElementById('wallet-input');
+        if (walletInput) {
+            walletInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    console.log('Enter key pressed');
+                    analyzeWallet();
+                }
+            });
+        }
     </script>
 </body>
 </html>

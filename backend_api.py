@@ -56,6 +56,7 @@ class MempoolForensicsRequest(BaseModel):
 
 class WalletAnalysisRequest(BaseModel):
     wallet: str
+    limit: Optional[int] = 200
 
 
 class TransactionAnalysisRequest(BaseModel):
@@ -105,9 +106,8 @@ def analyze_wallet_comprehensive(request: WalletAnalysisRequest):
     Comprehensive wallet analysis - fetches ALL transactions and provides complete profile.
     """
     try:
-        # Fetch all transactions (no limit - get as many as possible)
-        # Start with 1000, which is usually the max most RPCs will return
-        df = analyze_wallet(request.wallet, limit=1000)
+        # Fetch transactions based on user-specified limit
+        df = analyze_wallet(request.wallet, limit=request.limit)
         
         if df.empty:
             raise HTTPException(status_code=404, detail="No transactions found for this wallet")

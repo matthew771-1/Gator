@@ -160,3 +160,5 @@ df = analyze_wallet(request.wallet, limit=1000)  # Change 1000 to any number
 
 Enjoy your beautiful Gator analytics dashboard! 🐊
 
+
+

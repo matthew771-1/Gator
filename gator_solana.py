@@ -51,7 +51,19 @@ KNOWN_LABELS = {
     "So11111111111111111111111111111111111111112": "Wrapped SOL",
     "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA": "Token Program",
     "11111111111111111111111111111111": "System Program",
+    "ComputeBudget111111111111111111111111111111": "Compute Budget Program",
 }
+
+# Jito tip accounts for private execution detection
+JITO_TIP_ACCOUNTS = [
+    "96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5",
+    "HFqU5x63VTqvTsszeoPhtUYj9rdag4djXeFQiDmJzTMX",
+    "Cw8CFyM9FkoPhlTnrKMhTHqXheqJZNs4Fl31iWBP6UBu",
+    "ADuUkR4ykG49feZ5bwhvq0A25pl1QMrBSnXRKKkeoX8q",
+    "DttWaMuVvTiduZRNgLcGW9t66tePvm6znsc5tqQZFQk6",
+    "3AVi9Tg9Uo68tJfuvoKvqKNWKkC5wPdSSdeBnIzKZ6jJ",
+    "DoPtqvycNsD9nuNSqMZ5J1GzV91qfQ4t7x1qF4aPiPce",
+]
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -156,6 +168,297 @@ def fetch_transaction(signature: str) -> Optional[dict]:
 def get_label(address: str) -> str:
     """Get human-readable label for an address"""
     return KNOWN_LABELS.get(address, address[:8] + "..." + address[-4:])
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MEMPOOL FORENSICS - Priority Fee & Execution Style Detection
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def parse_compute_budget_instruction(instruction_data: bytes) -> dict:
+    """
+    Parse Compute Budget instruction to extract priority fee and compute unit limit.
+    Returns dict with 'priority_fee_microlamports' and 'compute_unit_limit' or None.
+    """
+    if not instruction_data or len(instruction_data) < 1:
+        return None
+    
+    # Compute Budget instruction discriminator (first byte)
+    # 2 = SetComputeUnitLimit, 3 = SetComputeUnitPrice (priority fee)
+    try:
+        if len(instruction_data) >= 5:
+            discriminator = instruction_data[0]
+            
+            if discriminator == 2:  # SetComputeUnitLimit
+                # Next 4 bytes are u32 compute unit limit
+                if len(instruction_data) >= 5:
+                    cu_limit = int.from_bytes(instruction_data[1:5], byteorder='little')
+                    return {"compute_unit_limit": cu_limit}
+            
+            elif discriminator == 3:  # SetComputeUnitPrice (priority fee)
+                # Next 8 bytes are u64 priority fee in microlamports
+                if len(instruction_data) >= 9:
+                    priority_fee = int.from_bytes(instruction_data[1:9], byteorder='little')
+                    return {"priority_fee_microlamports": priority_fee}
+    except:
+        pass
+    
+    return None
+
+
+def detect_jito_tip(tx_details: dict) -> Tuple[bool, float]:
+    """
+    Detect if transaction includes Jito tip (private execution indicator).
+    Returns (has_jito_tip, tip_amount_sol).
+    """
+    if not tx_details or not tx_details.get("meta"):
+        return False, 0.0
+    
+    try:
+        meta = tx_details["meta"]
+        msg = tx_details.get("transaction", {}).get("message", {})
+        
+        # Get all account keys
+        account_keys = msg.get("accountKeys", [])
+        if isinstance(account_keys, list) and len(account_keys) > 0:
+            # Handle both string and dict formats
+            accounts = []
+            for key in account_keys:
+                if isinstance(key, dict):
+                    accounts.append(key.get("pubkey", ""))
+                else:
+                    accounts.append(str(key))
+        else:
+            accounts = []
+        
+        # Check pre/post balances for Jito tip accounts
+        pre_balances = meta.get("preBalances", [])
+        post_balances = meta.get("postBalances", [])
+        
+        for i, account in enumerate(accounts):
+            if i < len(pre_balances) and i < len(post_balances):
+                if account in JITO_TIP_ACCOUNTS:
+                    tip_lamports = post_balances[i] - pre_balances[i]
+                    if tip_lamports > 0:
+                        return True, tip_lamports / 1e9  # Convert to SOL
+    except:
+        pass
+    
+    return False, 0.0
+
+
+def analyze_execution_profile(tx_details: dict) -> dict:
+    """
+    Analyze transaction for execution profile classification.
+    Returns dict with execution_profile, priority_fee, compute_unit_limit, jito_tip, etc.
+    """
+    result = {
+        "execution_profile": "RETAIL",
+        "priority_fee_microlamports": 0,
+        "compute_unit_limit": None,
+        "has_jito_tip": False,
+        "jito_tip_sol": 0.0,
+        "indicators": []
+    }
+    
+    if not tx_details:
+        return result
+    
+    try:
+        msg = tx_details.get("transaction", {}).get("message", {})
+        instructions = msg.get("instructions", [])
+        account_keys = msg.get("accountKeys", [])
+        
+        # Normalize account keys format
+        accounts = []
+        for key in account_keys:
+            if isinstance(key, dict):
+                accounts.append(key.get("pubkey", ""))
+            else:
+                accounts.append(str(key))
+        
+        # Parse instructions for Compute Budget
+        compute_budget_program = "ComputeBudget111111111111111111111111111111"
+        max_priority_fee = 0
+        max_cu_limit = None
+        
+        for ix in instructions:
+            if isinstance(ix, dict):
+                # Handle both parsed and unparsed instruction formats
+                program_id_index = ix.get("programIdIndex")
+                program_id_str = ix.get("programId")
+                
+                # Determine program ID
+                if program_id_str:
+                    program_id = program_id_str
+                elif program_id_index is not None and program_id_index < len(accounts):
+                    program_id = accounts[program_id_index]
+                else:
+                    continue
+                
+                if program_id == compute_budget_program:
+                    # Parse instruction data
+                    ix_data = ix.get("data")
+                    parsed_data = ix.get("parsed")
+                    
+                    # Try parsed format first (jsonParsed encoding)
+                    if parsed_data:
+                        parsed_type = parsed_data.get("type")
+                        if parsed_type == "setComputeUnitPrice":
+                            # Priority fee in microlamports
+                            fee = int(parsed_data.get("args", {}).get("microLamports", 0))
+                            if fee > 0:
+                                max_priority_fee = max(max_priority_fee, fee)
+                                result["priority_fee_microlamports"] = max_priority_fee
+                        elif parsed_type == "setComputeUnitLimit":
+                            # Compute unit limit
+                            cu_limit = int(parsed_data.get("args", {}).get("units", 0))
+                            if cu_limit > 0:
+                                if max_cu_limit is None or cu_limit > max_cu_limit:
+                                    max_cu_limit = cu_limit
+                                    result["compute_unit_limit"] = max_cu_limit
+                    
+                    # Fallback to raw data parsing
+                    elif ix_data:
+                        data_bytes = None
+                        # Handle base58 or hex encoded data
+                        if isinstance(ix_data, str):
+                            try:
+                                # Try to decode as base58 (Solana standard)
+                                try:
+                                    import base58
+                                    data_bytes = base58.b58decode(ix_data)
+                                except ImportError:
+                                    # Fallback: try hex if base58 not available
+                                    data_bytes = bytes.fromhex(ix_data.replace("0x", ""))
+                            except:
+                                try:
+                                    # Try hex
+                                    data_bytes = bytes.fromhex(ix_data.replace("0x", ""))
+                                except:
+                                    continue
+                        elif isinstance(ix_data, list):
+                            data_bytes = bytes(ix_data)
+                        
+                        if data_bytes:
+                            budget_data = parse_compute_budget_instruction(data_bytes)
+                            if budget_data:
+                                if "priority_fee_microlamports" in budget_data:
+                                    fee = budget_data["priority_fee_microlamports"]
+                                    max_priority_fee = max(max_priority_fee, fee)
+                                    result["priority_fee_microlamports"] = max_priority_fee
+                                
+                                if "compute_unit_limit" in budget_data:
+                                    cu_limit = budget_data["compute_unit_limit"]
+                                    if max_cu_limit is None or cu_limit > max_cu_limit:
+                                        max_cu_limit = cu_limit
+                                        result["compute_unit_limit"] = max_cu_limit
+        
+        # Check for Jito tip
+        has_jito, jito_tip = detect_jito_tip(tx_details)
+        result["has_jito_tip"] = has_jito
+        result["jito_tip_sol"] = jito_tip
+        
+        # Classify execution profile
+        if has_jito and jito_tip > 0:
+            result["execution_profile"] = "MEV_STYLE"
+            result["indicators"].append(f"Jito tip: {jito_tip:.6f} SOL")
+        elif max_priority_fee > 1000000 or (max_cu_limit and max_cu_limit > 1400000):
+            # High priority fee (>1M microlamports) or very high CU limit indicates urgent/pro trader
+            if max_priority_fee > 1000000:
+                result["execution_profile"] = "URGENT_USER"
+                result["indicators"].append(f"High priority fee: {max_priority_fee/1e6:.2f}M microlamports")
+            if max_cu_limit and max_cu_limit > 1400000:
+                result["execution_profile"] = "PRO_TRADER"
+                result["indicators"].append(f"High CU limit: {max_cu_limit:,}")
+        elif max_priority_fee > 100000 or (max_cu_limit and max_cu_limit > 200000):
+            # Moderate priority indicates urgent user
+            result["execution_profile"] = "URGENT_USER"
+            if max_priority_fee > 100000:
+                result["indicators"].append(f"Moderate priority fee: {max_priority_fee/1e6:.2f}M microlamports")
+        else:
+            result["execution_profile"] = "RETAIL"
+            if max_priority_fee > 0:
+                result["indicators"].append(f"Low priority fee: {max_priority_fee/1e6:.3f}M microlamports")
+            else:
+                result["indicators"].append("No priority fee set")
+    
+    except Exception as e:
+        result["indicators"].append(f"Analysis error: {str(e)}")
+    
+    return result
+
+
+def analyze_wallet_execution_profiles(wallet: str, limit: int = 100) -> dict:
+    """
+    Analyze wallet's execution profiles across multiple transactions.
+    Returns JSON-serializable dict with aggregated execution profile statistics.
+    """
+    signatures = fetch_signatures(wallet, limit)
+    
+    if not signatures:
+        return {
+            "wallet": wallet,
+            "total_transactions": 0,
+            "profiles": {},
+            "aggregate_profile": "UNKNOWN"
+        }
+    
+    profile_counts = {"RETAIL": 0, "URGENT_USER": 0, "PRO_TRADER": 0, "MEV_STYLE": 0}
+    total_priority_fee = 0
+    total_jito_tips = 0.0
+    jito_tip_count = 0
+    
+    for sig_info in signatures:
+        signature = sig_info["signature"]
+        tx_details = fetch_transaction(signature)
+        
+        if tx_details:
+            profile_data = analyze_execution_profile(tx_details)
+            profile = profile_data["execution_profile"]
+            profile_counts[profile] = profile_counts.get(profile, 0) + 1
+            
+            if profile_data["priority_fee_microlamports"] > 0:
+                total_priority_fee += profile_data["priority_fee_microlamports"]
+            
+            if profile_data["has_jito_tip"]:
+                total_jito_tips += profile_data["jito_tip_sol"]
+                jito_tip_count += 1
+    
+    total_tx = len(signatures)
+    
+    # Determine aggregate profile
+    if profile_counts["MEV_STYLE"] > total_tx * 0.3:
+        aggregate = "MEV_STYLE"
+    elif profile_counts["PRO_TRADER"] > total_tx * 0.3:
+        aggregate = "PRO_TRADER"
+    elif profile_counts["URGENT_USER"] > total_tx * 0.3:
+        aggregate = "URGENT_USER"
+    else:
+        aggregate = "RETAIL"
+    
+    return {
+        "wallet": wallet,
+        "total_transactions": total_tx,
+        "profiles": {
+            "RETAIL": profile_counts["RETAIL"],
+            "URGENT_USER": profile_counts["URGENT_USER"],
+            "PRO_TRADER": profile_counts["PRO_TRADER"],
+            "MEV_STYLE": profile_counts["MEV_STYLE"]
+        },
+        "profile_percentages": {
+            "RETAIL": round((profile_counts["RETAIL"] / total_tx * 100) if total_tx > 0 else 0, 2),
+            "URGENT_USER": round((profile_counts["URGENT_USER"] / total_tx * 100) if total_tx > 0 else 0, 2),
+            "PRO_TRADER": round((profile_counts["PRO_TRADER"] / total_tx * 100) if total_tx > 0 else 0, 2),
+            "MEV_STYLE": round((profile_counts["MEV_STYLE"] / total_tx * 100) if total_tx > 0 else 0, 2)
+        },
+        "aggregate_profile": aggregate,
+        "statistics": {
+            "avg_priority_fee_microlamports": round(total_priority_fee / total_tx if total_tx > 0 else 0, 2),
+            "total_jito_tips_sol": round(total_jito_tips, 6),
+            "jito_tip_count": jito_tip_count,
+            "jito_tip_percentage": round((jito_tip_count / total_tx * 100) if total_tx > 0 else 0, 2)
+        }
+    }
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

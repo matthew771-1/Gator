@@ -4,15 +4,18 @@ FastAPI backend for Gator OSINT Suite
 Provides REST API endpoints for wallet analysis and mempool forensics
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict, Set
 import sys
 import os
 import traceback
+import asyncio
+import json
+from datetime import datetime
 
 # Import Gator functions
 from gator_solana import (
@@ -39,6 +42,14 @@ except ImportError:
     EVM_SUPPORTED = False
     print("[!] Warning: EVM support not available (gator_evm.py not found)")
 
+# Import Stalker Service for live monitoring
+try:
+    from stalker_service import get_stalker, cleanup_stalkers, WalletStalker
+    STALKER_SUPPORTED = True
+except ImportError:
+    STALKER_SUPPORTED = False
+    print("[!] Warning: Stalker mode not available (stalker_service.py not found)")
+
 app = FastAPI(title="Gator OSINT API", version="1.0.0")
 
 # Enable CORS for frontend
@@ -49,6 +60,37 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Stalker Mode: Active WebSocket connections
+active_stalker_connections: Set[WebSocket] = set()
+
+# Stalker Mode: Callback for wallet activity
+async def on_wallet_activity(event: dict):
+    """
+    Callback triggered when a watched wallet becomes active.
+    Broadcasts event to all connected WebSocket clients.
+    """
+    print(f"[API] 🚨 Wallet activity detected: {event['wallet'][:10]}...")
+    
+    # TODO: Optionally trigger automatic profile scan here
+    # scan_result = await trigger_profile_scan(event['wallet'], event['chain'])
+    # event['scan_result'] = scan_result
+    
+    # Broadcast to all connected clients
+    message = json.dumps({
+        "type": "wallet_activity",
+        "data": event
+    })
+    
+    disconnected = set()
+    for connection in active_stalker_connections:
+        try:
+            await connection.send_text(message)
+        except Exception:
+            disconnected.add(connection)
+    
+    # Clean up disconnected clients
+    active_stalker_connections.difference_update(disconnected)
 
 # Serve static files (frontend)
 static_dir = os.path.join(os.path.dirname(__file__), "static")
@@ -157,8 +199,13 @@ def analyze_wallet_comprehensive(request: WalletAnalysisRequest):
         # Analyze reaction speed for bot detection
         reaction = analyze_reaction(request.wallet, tx_details_list)
         
-        # Calculate probabilities
-        probs = calc_probs(df, hourly_counts, daily_counts, sleep)
+        # Calculate probabilities (different signatures for Solana vs EVM)
+        if chain == "solana":
+            # Solana's calculate_probabilities takes 4 params (no reaction)
+            probs = calc_probs(df, hourly_counts, daily_counts, sleep)
+        else:
+            # EVM's calculate_probabilities takes 5 params (includes reaction)
+            probs = calc_probs(df, hourly_counts, daily_counts, sleep, reaction)
         
         # Analyze execution profiles (Solana only for now)
         mempool_data = {}
@@ -252,11 +299,27 @@ def analyze_wallet_comprehensive(request: WalletAnalysisRequest):
         # Determine confidence level
         confidence = "High" if total_tx > 100 else "Medium" if total_tx > 50 else "Low"
         
+        # Find most recent transaction timestamp
+        most_recent_timestamp = None
+        if tx_details_list and len(tx_details_list) > 0:
+            # tx_details_list should be sorted with most recent first
+            # Format: [{"timestamp": unix_timestamp, "details": {...}}, ...]
+            first_tx = tx_details_list[0]
+            
+            # Get the timestamp field (already a Unix timestamp int)
+            most_recent_timestamp = first_tx.get('timestamp')
+            
+            # Convert to ISO format if it's a unix timestamp
+            if most_recent_timestamp and isinstance(most_recent_timestamp, (int, float)):
+                from datetime import datetime
+                most_recent_timestamp = datetime.utcfromtimestamp(most_recent_timestamp).isoformat() + 'Z'
+        
         return {
             "wallet": request.wallet,
             "chain": chain,
             "total_transactions": total_tx,
             "confidence": confidence,
+            "most_recent_transaction": most_recent_timestamp,
             "activity_pattern": {
                 "hourly": hourly_counts,
                 "daily": daily_counts
@@ -320,6 +383,155 @@ def analyze_wallet_comprehensive(request: WalletAnalysisRequest):
 @app.get("/health")
 def health():
     return {"status": "healthy"}
+
+
+@app.websocket("/ws/stalker")
+async def stalker_websocket(websocket: WebSocket):
+    """
+    WebSocket endpoint for Live Stalker Mode.
+    Handles real-time wallet monitoring commands and broadcasts activity.
+    
+    Protocol:
+    - Client sends: {"action": "watch", "wallet": "0x...", "chain": "ethereum"}
+    - Client sends: {"action": "unwatch", "wallet": "0x..."}
+    - Client sends: {"action": "status"}
+    - Server sends: {"type": "wallet_activity", "data": {...}}
+    - Server sends: {"type": "status_update", "data": {...}}
+    """
+    if not STALKER_SUPPORTED:
+        await websocket.close(code=1011, reason="Stalker mode not available")
+        return
+    
+    await websocket.accept()
+    active_stalker_connections.add(websocket)
+    
+    print(f"[API] 👁️  Stalker client connected (total: {len(active_stalker_connections)})")
+    
+    # Send initial connection confirmation
+    await websocket.send_json({
+        "type": "connected",
+        "message": "Stalker mode ready"
+    })
+    
+    try:
+        while True:
+            # Receive command from client
+            data = await websocket.receive_text()
+            command = json.loads(data)
+            action = command.get("action")
+            
+            if action == "watch":
+                # Start watching a wallet
+                wallet = command.get("wallet")
+                chain = command.get("chain", "ethereum")
+                
+                if not wallet:
+                    await websocket.send_json({
+                        "type": "error",
+                        "message": "Wallet address required"
+                    })
+                    continue
+                
+                try:
+                    # Get or create stalker for this chain
+                    stalker = await get_stalker(chain)
+                    
+                    # Register callback if not already set
+                    if not stalker.on_activity:
+                        stalker.on_activity = on_wallet_activity
+                    
+                    # Subscribe to wallet
+                    success = await stalker.watch_wallet(wallet)
+                    
+                    if success:
+                        await websocket.send_json({
+                            "type": "watch_started",
+                            "wallet": wallet,
+                            "chain": chain,
+                            "message": f"Now watching {wallet[:10]}..."
+                        })
+                    else:
+                        await websocket.send_json({
+                            "type": "error",
+                            "message": f"Failed to watch {wallet}"
+                        })
+                        
+                except Exception as e:
+                    await websocket.send_json({
+                        "type": "error",
+                        "message": f"Watch failed: {str(e)}"
+                    })
+            
+            elif action == "unwatch":
+                # Stop watching a wallet
+                wallet = command.get("wallet")
+                chain = command.get("chain", "ethereum")
+                
+                if not wallet:
+                    await websocket.send_json({
+                        "type": "error",
+                        "message": "Wallet address required"
+                    })
+                    continue
+                
+                try:
+                    stalker = await get_stalker(chain)
+                    await stalker.unwatch_wallet(wallet)
+                    
+                    await websocket.send_json({
+                        "type": "watch_stopped",
+                        "wallet": wallet,
+                        "message": f"Stopped watching {wallet[:10]}..."
+                    })
+                    
+                except Exception as e:
+                    await websocket.send_json({
+                        "type": "error",
+                        "message": f"Unwatch failed: {str(e)}"
+                    })
+            
+            elif action == "status":
+                # Get status of all watched wallets
+                chain = command.get("chain", "ethereum")
+                
+                try:
+                    stalker = await get_stalker(chain)
+                    status = stalker.get_watched_wallets_status()
+                    
+                    await websocket.send_json({
+                        "type": "status_update",
+                        "chain": chain,
+                        "wallets": status,
+                        "connected": stalker.connected
+                    })
+                    
+                except Exception as e:
+                    await websocket.send_json({
+                        "type": "error",
+                        "message": f"Status check failed: {str(e)}"
+                    })
+            
+            else:
+                await websocket.send_json({
+                    "type": "error",
+                    "message": f"Unknown action: {action}"
+                })
+                
+    except WebSocketDisconnect:
+        print("[API] Stalker client disconnected")
+    except Exception as e:
+        print(f"[API] Stalker WebSocket error: {e}")
+    finally:
+        active_stalker_connections.discard(websocket)
+        print(f"[API] Stalker clients remaining: {len(active_stalker_connections)}")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Clean up stalker connections on server shutdown"""
+    if STALKER_SUPPORTED:
+        print("[API] Shutting down stalker services...")
+        await cleanup_stalkers()
 
 
 if __name__ == "__main__":

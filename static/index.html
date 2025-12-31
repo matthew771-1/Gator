@@ -724,6 +724,243 @@
             filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4));
         }
 
+        /* Stalker panel styles removed - feature replaced with simple "Last Active" display */
+
+        /* Responsive */
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 380px;
+            background: rgba(3, 3, 3, 0.98);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(239, 68, 68, 0.4);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(239, 68, 68, 0.3), 0 0 0 1px rgba(239, 68, 68, 0.1) inset;
+            z-index: 1000;
+            overflow: hidden;
+            transform: translateX(420px);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .stalker-panel.show {
+            transform: translateX(0);
+        }
+
+        .stalker-header {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.15));
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(239, 68, 68, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stalker-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #ef4444;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stalker-pulse {
+            width: 10px;
+            height: 10px;
+            background: #ef4444;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+            }
+            50% {
+                opacity: 0.5;
+                box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+            }
+        }
+
+        .stalker-close {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px;
+            transition: color 0.2s;
+        }
+
+        .stalker-close:hover {
+            color: #ef4444;
+        }
+
+        .stalker-body {
+            padding: 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .stalker-empty {
+            padding: 40px 20px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .stalker-wallet {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.2s;
+        }
+
+        .stalker-wallet:hover {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .stalker-wallet:last-child {
+            border-bottom: none;
+        }
+
+        .stalker-wallet-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .stalker-wallet-address {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #e5e7eb;
+            font-weight: 600;
+        }
+
+        .stalker-wallet-remove {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .stalker-wallet-remove:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+        }
+
+        .stalker-wallet-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+        }
+
+        .stalker-status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .stalker-status-badge.active {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .stalker-status-badge.idle {
+            background: rgba(107, 114, 128, 0.15);
+            color: #9ca3af;
+            border: 1px solid rgba(107, 114, 128, 0.3);
+        }
+
+        .stalker-status-icon {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .stalker-status-icon.active {
+            background: #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+        }
+
+        .stalker-status-icon.idle {
+            background: #6b7280;
+        }
+
+        .stalker-last-activity {
+            color: #6b7280;
+            font-size: 11px;
+        }
+
+        .stalker-wallet.flash {
+            animation: flash 0.6s ease-out;
+        }
+
+        @keyframes flash {
+            0%, 100% {
+                background: transparent;
+            }
+            50% {
+                background: rgba(16, 185, 129, 0.2);
+                border-color: rgba(16, 185, 129, 0.5);
+            }
+        }
+
+        /* Watch Live Button */
+        .watch-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.15));
+            border: 2px solid rgba(239, 68, 68, 0.4);
+            border-radius: 10px;
+            color: #ef4444;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .watch-btn:hover {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.25));
+            border-color: #ef4444;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .watch-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .watch-btn.watching {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.15));
+            border-color: rgba(16, 185, 129, 0.4);
+            color: #10b981;
+        }
+
+        .watch-btn.watching:hover {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.25));
+            border-color: #10b981;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+
         /* Responsive */
         @media (max-width: 1024px) {
             .grid {
@@ -763,6 +1000,7 @@
                 <span>Public Data Analysis</span>
             </div>
         </div>
+
 
         <!-- Search Section -->
         <div class="search-section">
@@ -890,6 +1128,10 @@
                         <div class="stat-box">
                             <div class="stat-label">Transactions</div>
                             <div class="stat-value" id="tx-count-display">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Last Active</div>
+                            <div class="stat-value" id="last-active-display" style="font-size: 16px;">--</div>
                         </div>
                     </div>
                 </div>
@@ -1220,6 +1462,9 @@
                 data.wallet.substring(0, 8) + '...' + data.wallet.substring(data.wallet.length - 4);
             document.getElementById('confidence-display').textContent = data.confidence;
             document.getElementById('tx-count-display').textContent = data.total_transactions.toLocaleString();
+
+            // Calculate and display last active time using ACTUAL timestamp from backend
+            displayLastActive(data.most_recent_transaction);
 
             // Show/hide low transaction warning
             const lowTxWarning = document.getElementById('low-tx-warning');
@@ -1671,6 +1916,86 @@
                 }
             });
         }
+
+        // ===================================================================
+        // LAST ACTIVE CALCULATION
+        // ===================================================================
+
+        function calculateLastActive(mostRecentTimestamp) {
+            if (!mostRecentTimestamp) {
+                return 'Unknown';
+            }
+
+            const now = new Date();
+            const lastActive = new Date(mostRecentTimestamp);
+            
+            // Check if date is valid
+            if (isNaN(lastActive.getTime())) {
+                return 'Unknown';
+            }
+            
+            const diffMs = now - lastActive;
+            const diffSeconds = Math.floor(diffMs / 1000);
+            const diffMinutes = Math.floor(diffSeconds / 60);
+            const diffHours = Math.floor(diffMinutes / 60);
+            const diffDays = Math.floor(diffHours / 24);
+
+            // Active NOW if within last 60 seconds
+            if (diffSeconds < 60 && diffSeconds >= 0) {
+                return 'Active NOW';
+            }
+            // Minutes ago
+            else if (diffMinutes < 60 && diffMinutes >= 0) {
+                return `${diffMinutes}m ago`;
+            }
+            // Hours ago
+            else if (diffHours < 24 && diffHours >= 0) {
+                return `${diffHours}h ago`;
+            }
+            // Days ago
+            else if (diffDays < 30 && diffDays >= 0) {
+                return `${diffDays}d ago`;
+            }
+            // Months ago
+            else if (diffDays >= 30) {
+                const diffMonths = Math.floor(diffDays / 30);
+                return `${diffMonths}mo ago`;
+            }
+            // Negative difference (future date - shouldn't happen)
+            else {
+                return 'Unknown';
+            }
+        }
+
+        function displayLastActive(mostRecentTimestamp) {
+            const lastActiveText = calculateLastActive(mostRecentTimestamp);
+            const lastActiveElement = document.getElementById('last-active-display');
+            
+            if (lastActiveElement) {
+                lastActiveElement.textContent = lastActiveText;
+                
+                // Color coding based on activity
+                if (lastActiveText === 'Active NOW') {
+                    lastActiveElement.style.color = '#10b981'; // Green
+                    lastActiveElement.style.textShadow = '0 0 10px rgba(16, 185, 129, 0.5)';
+                    lastActiveElement.style.animation = 'pulse 2s infinite';
+                } else if (lastActiveText.includes('m ago') || lastActiveText.includes('h ago')) {
+                    lastActiveElement.style.color = '#3b82f6'; // Blue
+                    lastActiveElement.style.textShadow = 'none';
+                    lastActiveElement.style.animation = 'none';
+                } else if (lastActiveText === 'Unknown') {
+                    lastActiveElement.style.color = '#6b7280'; // Darker gray
+                    lastActiveElement.style.textShadow = 'none';
+                    lastActiveElement.style.animation = 'none';
+                } else {
+                    lastActiveElement.style.color = '#9ca3af'; // Gray
+                    lastActiveElement.style.textShadow = 'none';
+                    lastActiveElement.style.animation = 'none';
+                }
+            }
+        }
+
+        // Remove all WebSocket stalker code - replaced with simple last active display
     </script>
 </body>
 </html>

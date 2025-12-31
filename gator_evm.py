@@ -131,18 +131,28 @@ class WalletConnection:
 
 
 def api_call(chain: str, params: dict):
-    """Make API call using Etherscan API V2 format"""
-    # Get chainid for the specified chain (default to Ethereum)
-    chainid = CHAIN_IDS.get(chain, 1)
+    """Make API call - uses V2 API for all chains"""
     
-    # Use V2 unified endpoint
+    # Get chainid for the chain
+    chainid = CHAIN_IDS.get(chain, 1)
     api_url = API_V2_BASE_URL
     params["apikey"] = ETHERSCAN_API_KEY
-    params["chainid"] = chainid  # Required for V2
+    params["chainid"] = chainid
     
     try:
         response = requests.get(api_url, params=params, timeout=30)
         data = response.json()
+        
+        # Debug: Print API response for troubleshooting
+        print(f"[DEBUG] Chain: {chain} (chainid: {chainid})")
+        print(f"[DEBUG] API URL: {api_url}")
+        print(f"[DEBUG] Status: {data.get('status')}, Message: {data.get('message')}")
+        if isinstance(data.get('result'), list):
+            print(f"[DEBUG] Result count: {len(data.get('result', []))}")
+        elif isinstance(data.get('result'), str):
+            result_str = str(data.get('result'))
+            print(f"[DEBUG] Result: {result_str[:150]}")
+        
         status = data.get("status")
         result = data.get("result")
         message = data.get("message", "")
@@ -150,25 +160,49 @@ def api_call(chain: str, params: dict):
         if status == "1":
             # Success - return the result
             if isinstance(result, str) and result == "0":
-                return []  # Empty list, not None
-            return result if result else []
-        elif status == "0":
-            # Status 0 can mean "no results" (valid) or "error" (invalid)
-            if message and "no transactions found" in message.lower():
-                return []  # Valid empty result
-            elif message and ("not found" in message.lower() or "invalid" in message.lower()):
-                print(f"\n[!] API Error: {message}")
-                return None
-            elif message and "deprecated" in message.lower():
-                print(f"\n[!] API Error: {message}")
-                return None
-            else:
-                # Unknown status 0 - treat as no results
+                print("[DEBUG] API returned string '0' - treating as empty")
                 return []
-        return None
+            if isinstance(result, list):
+                return result
+            print(f"[DEBUG] Unexpected result type: {type(result)}")
+            return []
+        elif status == "0":
+            # Status 0 means error or no results
+            if "api plan" in message.lower() or "upgrade" in message.lower() or "not supported for this chain" in message.lower():
+                print(f"\n[!] ⚠️  API PLAN LIMITATION ⚠️")
+                print(f"[!] Chain: {chain.upper()}")
+                print(f"[!] Error: {message}")
+                print(f"[!] ")
+                print(f"[!] The FREE Etherscan API key only supports Ethereum.")
+                print(f"[!] To use {chain.upper()}, Base, Arbitrum, Optimism, or Polygon:")
+                print(f"[!]   1. Upgrade your API plan at: https://etherscan.io/apis")
+                print(f"[!]   2. Or get a chain-specific key from:")
+                if chain == "base":
+                    print(f"[!]      https://basescan.org/myapikey")
+                elif chain == "arbitrum":
+                    print(f"[!]      https://arbiscan.io/myapikey")
+                elif chain == "optimism":
+                    print(f"[!]      https://optimistic.etherscan.io/myapikey")
+                elif chain == "polygon":
+                    print(f"[!]      https://polygonscan.com/myapikey")
+                print(f"[!] ")
+                return []
+            elif "no transactions found" in message.lower():
+                print("[DEBUG] No transactions found (valid empty result)")
+                return []
+            elif "not found" in message.lower() or "invalid" in message.lower():
+                print(f"[!] API Error: {message}")
+                return []
+            else:
+                print(f"[DEBUG] Status 0: {message}")
+                return []
+        print(f"[DEBUG] Unexpected API response status: {status}")
+        return []
     except Exception as e:
         print(f"\n[!] Request failed: {str(e)}")
-        return None
+        import traceback
+        traceback.print_exc()
+        return []
 
 
 def fetch_transactions(address: str, chain: str = "ethereum", limit: int = 100):
@@ -240,8 +274,8 @@ def analyze_wallet(address: str, chain: str = "ethereum", limit: int = 100) -> T
             tx["_type"] = "token"
             all_txs.append(tx)
     
-    # Sort by timestamp (oldest first for analysis)
-    all_txs.sort(key=lambda x: int(x.get("timeStamp", 0)))
+    # Sort by timestamp (DESCENDING - most recent first, matches Solana behavior)
+    all_txs.sort(key=lambda x: int(x.get("timeStamp", 0)), reverse=True)
     
     print(f"[+] Found {len(all_txs)} total transactions ({len(txs) if txs else 0} regular, {len(token_txs) if token_txs else 0} token)\n")
     

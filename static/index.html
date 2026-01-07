@@ -54,24 +54,46 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 20px 0;
-            margin-bottom: 40px;
+            padding: 30px 0;
+            margin-bottom: 50px;
         }
 
         .logo {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
         }
 
         .logo-icon {
-            font-size: 48px;
+            font-size: 72px;
+            filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.3));
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
         }
 
         .logo-text h1 {
-            font-size: 32px;
-            font-weight: 700;
-            color: #10b981;
+            font-size: 56px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #10b981 0%, #3b82f6 50%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .logo-text .tagline {
+            font-size: 13px;
+            font-weight: 500;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 2px;
         }
 
         .badge {
@@ -90,24 +112,48 @@
         .search-section {
             background: rgba(3, 3, 3, 0.99);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            border-radius: 16px;
-            padding: 60px 40px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 70px 50px;
             text-align: center;
             margin-bottom: 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.8),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .search-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(59, 130, 246, 0.5) 25%,
+                rgba(16, 185, 129, 0.5) 50%,
+                rgba(139, 92, 246, 0.5) 75%,
+                transparent 100%);
         }
 
         .search-section h2 {
-            font-size: 28px;
+            font-size: 32px;
+            font-weight: 700;
             margin-bottom: 12px;
-            color: #f9fafb;
+            background: linear-gradient(135deg, #f9fafb 0%, #d1d5db 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .search-section p {
-            font-size: 15px;
+            font-size: 16px;
             color: #9ca3af;
-            margin-bottom: 30px;
+            margin-bottom: 35px;
+            font-weight: 400;
         }
 
         .search-box {
@@ -148,11 +194,13 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
         }
 
         .search-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 10px 40px rgba(59, 130, 246, 0.5);
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
         }
 
         .search-btn:disabled {
@@ -303,6 +351,38 @@
             font-size: 18px;
             font-family: 'Courier New', monospace;
             color: #f9fafb;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .copy-btn {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #3b82f6;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        .copy-btn:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+            transform: translateY(-1px);
+        }
+
+        .copy-btn:active {
+            transform: translateY(0);
+        }
+
+        .copy-btn.copied {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.3);
+            color: #10b981;
         }
 
         .wallet-stats {
@@ -993,6 +1073,7 @@
                 <div class="logo-icon">🐊</div>
                 <div class="logo-text">
                     <h1>GATOR</h1>
+                    <div class="tagline">Blockchain Intelligence Platform</div>
                 </div>
             </div>
             <div class="badge">
@@ -1004,8 +1085,8 @@
 
         <!-- Search Section -->
         <div class="search-section">
-            <h2>Wallet Analysis</h2>
-            <p>Enter a blockchain wallet address to analyze behavioral patterns and risk indicators</p>
+            <h2>Behavioral Profiling & Side-Channel Analysis</h2>
+            <p>Advanced blockchain intelligence that reveals <strong>who</strong> is behind a wallet using behavioral patterns, reaction speeds, and transaction complexity</p>
             
             <div class="search-box">
                 <input 
@@ -1101,7 +1182,9 @@
 
             <div class="disclaimer">
                 <span style="opacity: 0.6;">ℹ️</span>
-                <span style="font-size: 13px; color: #9ca3af;">Analysis is based on public blockchain data. Results are probabilistic behavioral inferences. For best results, analyze wallets with 100+ transactions.</span>
+                <span style="font-size: 13px; color: #9ca3af;">
+                    Uses only public blockchain data. Detects timezone patterns, bot activity (reaction speed &lt;5s), and transaction complexity. Best results with 100+ transactions.
+                </span>
             </div>
         </div>
 
@@ -1118,7 +1201,10 @@
                 <div class="wallet-header">
                     <div>
                         <div class="wallet-address">Wallet Address</div>
-                        <div class="wallet-id" id="wallet-display"></div>
+                        <div class="wallet-id">
+                            <span id="wallet-display"></span>
+                            <button class="copy-btn" id="copy-wallet-btn" onclick="copyWalletAddress()">📋 Copy</button>
+                        </div>
                     </div>
                     <div class="wallet-stats">
                         <div class="stat-box">
@@ -1456,7 +1542,40 @@
             }
         }
 
+        // Store full wallet address for copying
+        let currentWalletAddress = '';
+        let copyTimeout = null;
+
+        function copyWalletAddress() {
+            if (!currentWalletAddress) return;
+            
+            // Clear any existing timeout
+            if (copyTimeout) {
+                clearTimeout(copyTimeout);
+            }
+            
+            const btn = document.getElementById('copy-wallet-btn');
+            const originalText = '📋 Copy';
+            
+            navigator.clipboard.writeText(currentWalletAddress).then(() => {
+                btn.textContent = '✓ Copied!';
+                btn.classList.add('copied');
+                
+                copyTimeout = setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.remove('copied');
+                    copyTimeout = null;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard');
+            });
+        }
+
         function displayResults(data) {
+            // Store full address for copying
+            currentWalletAddress = data.wallet;
+            
             // Update wallet info
             document.getElementById('wallet-display').textContent = 
                 data.wallet.substring(0, 8) + '...' + data.wallet.substring(data.wallet.length - 4);
@@ -1586,15 +1705,43 @@
             Object.values(charts).forEach(chart => chart.destroy());
             charts = {};
 
-            // Activity Pattern Chart
+            // Activity Pattern Chart with color coding
+            const hourlyData = data.activity_pattern.hourly;
+            const sleepStart = data.sleep_window.start_hour;
+            const sleepEnd = data.sleep_window.end_hour;
+            
+            // Find peak hour (hour with maximum activity)
+            const peakHour = hourlyData.indexOf(Math.max(...hourlyData));
+            
+            // Create background colors array: red for sleep window, green for peak, blue for normal
+            const backgroundColors = Array.from({length: 24}, (_, hour) => {
+                // Check if hour is in sleep window (handle wrap-around)
+                let inSleepWindow = false;
+                if (sleepStart <= sleepEnd) {
+                    // Normal case: sleep window doesn't wrap (e.g., 2:00 to 6:00)
+                    inSleepWindow = hour >= sleepStart && hour < sleepEnd;
+                } else {
+                    // Wrapping case: sleep window wraps around midnight (e.g., 23:00 to 5:00)
+                    inSleepWindow = hour >= sleepStart || hour < sleepEnd;
+                }
+                
+                if (hour === peakHour) {
+                    return '#22c55e'; // Green for peak hour
+                } else if (inSleepWindow) {
+                    return '#ef4444'; // Red for sleep window
+                } else {
+                    return '#3b82f6'; // Blue for normal activity
+                }
+            });
+            
             charts.activity = new Chart(document.getElementById('activity-chart'), {
                 type: 'bar',
                 data: {
                     labels: Array.from({length: 24}, (_, i) => i),
                     datasets: [{
                         label: 'Active',
-                        data: data.activity_pattern.hourly,
-                        backgroundColor: '#3b82f6',
+                        data: hourlyData,
+                        backgroundColor: backgroundColors,
                         borderRadius: 4
                     }]
                 },
@@ -1602,14 +1749,40 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const hour = parseInt(context.label);
+                                    let label = `Hour ${hour}: ${context.parsed.y} transactions`;
+                                    if (hour === peakHour) {
+                                        label += ' (Peak Hour)';
+                                    } else if (backgroundColors[hour] === '#ef4444') {
+                                        label += ' (Sleep Window)';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
                     },
                     scales: {
                         x: { 
+                            title: {
+                                display: true,
+                                text: 'Hour of Day (UTC)',
+                                color: '#9ca3af',
+                                font: { size: 12, weight: '500' }
+                            },
                             grid: { color: 'rgba(255,255,255,0.05)' },
                             ticks: { color: '#9ca3af' }
                         },
                         y: { 
+                            title: {
+                                display: true,
+                                text: 'Number of Transactions',
+                                color: '#9ca3af',
+                                font: { size: 12, weight: '500' }
+                            },
                             grid: { color: 'rgba(255,255,255,0.05)' },
                             ticks: { color: '#9ca3af' }
                         }
@@ -1662,10 +1835,22 @@
                     plugins: { legend: { display: false } },
                     scales: {
                         x: { 
+                            title: {
+                                display: true,
+                                text: 'Day of Week',
+                                color: '#9ca3af',
+                                font: { size: 12, weight: '500' }
+                            },
                             grid: { color: 'rgba(255,255,255,0.05)' },
                             ticks: { color: '#9ca3af' }
                         },
                         y: { 
+                            title: {
+                                display: true,
+                                text: 'Number of Transactions',
+                                color: '#9ca3af',
+                                font: { size: 12, weight: '500' }
+                            },
                             grid: { color: 'rgba(255,255,255,0.05)' },
                             ticks: { color: '#9ca3af' }
                         }

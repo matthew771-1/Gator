@@ -369,6 +369,57 @@
             margin-bottom: 30px;
         }
 
+        /* Export Bar */
+        .export-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .export-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #9ca3af;
+            margin-right: 8px;
+        }
+
+        .export-btn {
+            padding: 10px 18px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            color: #3b82f6;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .export-btn:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .export-btn:active {
+            transform: translateY(0);
+        }
+
+        .export-btn.success {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.3);
+            color: #10b981;
+        }
+
         .wallet-header {
             display: flex;
             align-items: center;
@@ -1341,6 +1392,23 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Export/Share Bar -->
+                <div class="export-bar">
+                    <span class="export-label">📤 Export/Share:</span>
+                    <button class="export-btn" onclick="exportAsJSON()">
+                        <span>📄</span>
+                        <span>JSON</span>
+                    </button>
+                    <button class="export-btn" onclick="exportAsText()">
+                        <span>📝</span>
+                        <span>Text Report</span>
+                    </button>
+                    <button class="export-btn" onclick="copyReportToClipboard()">
+                        <span>📋</span>
+                        <span>Copy Summary</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Low Transaction Count Warning (Hidden by default) -->
@@ -1757,8 +1825,9 @@
             }
         }
 
-        // Store full wallet address for copying
+        // Store full wallet address and analysis data for copying/exporting
         let currentWalletAddress = '';
+        let currentAnalysisData = null;
         let copyTimeout = null;
 
         function copyWalletAddress() {
@@ -1787,9 +1856,170 @@
             });
         }
 
+        // ===================================================================
+        // EXPORT/SHARE FUNCTIONS
+        // ===================================================================
+
+        function exportAsJSON() {
+            if (!currentAnalysisData) {
+                alert('No analysis data available to export');
+                return;
+            }
+
+            const jsonStr = JSON.stringify(currentAnalysisData, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `gator_analysis_${currentWalletAddress.substring(0, 8)}_${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showExportSuccess('JSON downloaded');
+        }
+
+        function exportAsText() {
+            if (!currentAnalysisData) {
+                alert('No analysis data available to export');
+                return;
+            }
+
+            const data = currentAnalysisData;
+            const report = `
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                          GATOR OSINT ANALYSIS REPORT                          ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+Wallet Address: ${data.wallet}
+Chain: ${data.chain.toUpperCase()}
+Analysis Date: ${new Date().toISOString()}
+Total Transactions: ${data.total_transactions}
+Confidence: ${data.confidence}
+
+═══════════════════════════════════════════════════════════════════════════════
+BEHAVIORAL PROFILE
+═══════════════════════════════════════════════════════════════════════════════
+
+Bot Probability:          ${data.profile_classification.bot.toFixed(1)}%
+Whale Probability:        ${data.profile_classification.whale.toFixed(1)}%
+Institutional:            ${data.profile_classification.institutional.toFixed(1)}%
+Professional:             ${data.profile_classification.professional.toFixed(1)}%
+Airdrop Farmer:           ${data.profile_classification.airdrop_farmer.toFixed(1)}%
+
+═══════════════════════════════════════════════════════════════════════════════
+REACTION SPEED ANALYSIS (Bot Detection)
+═══════════════════════════════════════════════════════════════════════════════
+
+Bot Confidence:           ${data.reaction_speed.bot_confidence.toFixed(0)}%
+Average Reaction Time:    ${data.reaction_speed.avg_reaction_time.toFixed(1)}s
+Fastest Reaction:         ${data.reaction_speed.fastest_reaction.toFixed(2)}s
+
+Instant Reactions (<5s):  ${data.reaction_speed.instant_reactions}
+Fast Reactions (5-30s):   ${data.reaction_speed.fast_reactions}
+Human Reactions (>30s):   ${data.reaction_speed.human_reactions}
+
+═══════════════════════════════════════════════════════════════════════════════
+SLEEP PATTERN & TIMEZONE
+═══════════════════════════════════════════════════════════════════════════════
+
+Sleep Window:             ${String(data.sleep_window.start_hour).padStart(2, '0')}:00 - ${String(data.sleep_window.end_hour).padStart(2, '0')}:00 UTC
+Sleep Confidence:         ${data.sleep_window.confidence.toFixed(1)}%
+
+Geographic Origin:
+  Asia/Pacific:           ${data.geographic_origin.asia_pacific.toFixed(1)}%
+  Europe:                 ${data.geographic_origin.europe.toFixed(1)}%
+  Americas:               ${data.geographic_origin.americas.toFixed(1)}%
+
+═══════════════════════════════════════════════════════════════════════════════
+KEY INSIGHTS
+═══════════════════════════════════════════════════════════════════════════════
+
+${data.key_insights.map((insight, i) => `${i + 1}. ${insight}`).join('\n')}
+
+═══════════════════════════════════════════════════════════════════════════════
+Generated by GATOR - Blockchain Intelligence Platform
+https://github.com/Tgcohce/Gator
+═══════════════════════════════════════════════════════════════════════════════
+`;
+
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `gator_report_${currentWalletAddress.substring(0, 8)}_${Date.now()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showExportSuccess('Text report downloaded');
+        }
+
+        function copyReportToClipboard() {
+            if (!currentAnalysisData) {
+                alert('No analysis data available to copy');
+                return;
+            }
+
+            const data = currentAnalysisData;
+            const summary = `🐊 GATOR Analysis Summary
+
+Wallet: ${data.wallet}
+Chain: ${data.chain.toUpperCase()}
+Transactions: ${data.total_transactions}
+
+🤖 Bot Detection: ${data.reaction_speed.bot_confidence.toFixed(0)}% confidence
+⚡ Avg Reaction: ${data.reaction_speed.avg_reaction_time.toFixed(1)}s
+🕒 Sleep Window: ${String(data.sleep_window.start_hour).padStart(2, '0')}:00 - ${String(data.sleep_window.end_hour).padStart(2, '0')}:00 UTC
+🌍 Primary Region: ${getPrimaryRegion(data.geographic_origin)}
+
+💡 Top Insights:
+${data.key_insights.slice(0, 3).map((insight, i) => `${i + 1}. ${insight}`).join('\n')}
+
+Generated by GATOR - Blockchain Intelligence Platform`;
+
+            navigator.clipboard.writeText(summary).then(() => {
+                showExportSuccess('Summary copied to clipboard');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard');
+            });
+        }
+
+
+        function getPrimaryRegion(geoData) {
+            const max = Math.max(geoData.asia_pacific, geoData.europe, geoData.americas);
+            if (max === geoData.asia_pacific) return 'Asia/Pacific';
+            if (max === geoData.europe) return 'Europe';
+            if (max === geoData.americas) return 'Americas';
+            return 'Unknown';
+        }
+
+        function showExportSuccess(message) {
+            // Find any export button and briefly show success state
+            const buttons = document.querySelectorAll('.export-btn');
+            buttons.forEach(btn => {
+                btn.classList.add('success');
+            });
+            
+            // Show success message
+            const originalText = buttons[0].textContent;
+            
+            setTimeout(() => {
+                buttons.forEach(btn => {
+                    btn.classList.remove('success');
+                });
+            }, 2000);
+            
+            console.log(`✓ ${message}`);
+        }
+
         function displayResults(data) {
-            // Store full address for copying
+            // Store full address and data for copying/exporting
             currentWalletAddress = data.wallet;
+            currentAnalysisData = data;
             
             // Update wallet info
             document.getElementById('wallet-display').textContent = 

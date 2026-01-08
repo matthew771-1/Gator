@@ -22,6 +22,7 @@
 """
 
 import sys
+import os
 import argparse
 import requests
 import pandas as pd
@@ -35,12 +36,23 @@ from collections import defaultdict
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONFIGURATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
-RPC_URL = "https://mainnet.helius-rpc.com/?api-key=d79d34cb-620d-419c-9d39-c57b3c25a099"
+# Load API key from environment variable
+HELIUS_API_KEY = os.getenv("HELIUS_API_KEY")
+if not HELIUS_API_KEY:
+    print("[!] ERROR: HELIUS_API_KEY not found in environment variables")
+    print("[!] Please create a .env file with your API key (see .env.example)")
+    sys.exit(1)
+
+RPC_URL = f"https://mainnet.helius-rpc.com/?api-key={HELIUS_API_KEY}"
 DEFAULT_LIMIT = 100
 
 # Configure stdout encoding for Windows compatibility

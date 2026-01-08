@@ -20,6 +20,7 @@
 """
 
 import sys
+import os
 import argparse
 import requests
 import pandas as pd
@@ -29,12 +30,21 @@ import numpy as np
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Tuple
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# CONFIGURATION - ADD YOUR API KEY HERE
+# CONFIGURATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
-ETHERSCAN_API_KEY = "D4BP9GF8BKTTDIAP442ZY2V3N6UN7GC1UM"
+# Load API key from environment variable
+ETHERSCAN_API_KEY = os.getenv("ETHERSCAN_API_KEY")
+if not ETHERSCAN_API_KEY:
+    print("[!] ERROR: ETHERSCAN_API_KEY not found in environment variables")
+    print("[!] Please create a .env file with your API key (see .env.example)")
+    sys.exit(1)
 
 # Configure stdout encoding for Windows compatibility
 import sys

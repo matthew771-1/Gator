@@ -3,13 +3,23 @@ import time
 import requests
 import math
 import sys
+import os
 from datetime import datetime
 from solana.rpc.api import Client
 from solders.pubkey import Pubkey
 from solders.signature import Signature
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # --- CONFIGURATION ---
-RPC_HTTPS_URL = "https://mainnet.helius-rpc.com/?api-key=307e88f2-33c4-467c-968a-69f194fac6d8"
+HELIUS_API_KEY = os.getenv("HELIUS_API_KEY")
+if not HELIUS_API_KEY:
+    print("[!] ERROR: HELIUS_API_KEY not found in environment variables")
+    print("[!] Create a .env file (UTF-8) or set HELIUS_API_KEY in your shell.")
+    sys.exit(1)
+
+RPC_HTTPS_URL = f"https://mainnet.helius-rpc.com/?api-key={HELIUS_API_KEY}"
 
 # FINGERPRINTS
 KNOWN_PROGRAMS = {

@@ -6,10 +6,14 @@ WebSocket-based real-time wallet monitoring for EVM and Solana chains
 
 import asyncio
 import json
+import os
 from typing import Dict, Set, Optional, Callable
 from datetime import datetime
 from collections import defaultdict
 import websockets
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Solana imports
 try:
@@ -31,8 +35,12 @@ EVM_WSS_ENDPOINTS = {
 }
 
 # Solana RPC WebSocket endpoint
-# TODO: Replace with your Helius/Alchemy/QuickNode API key
-SOLANA_WSS_URL = "wss://mainnet.helius-rpc.com/?api-key=307e88f2-33c4-467c-968a-69f194fac6d8"
+# Prefer explicit override, otherwise fall back to Helius if HELIUS_API_KEY is present.
+# NOTE: Never hardcode API keys in source control.
+HELIUS_API_KEY = os.getenv("HELIUS_API_KEY")
+SOLANA_WSS_URL = os.getenv("SOLANA_WSS_URL") or (
+    f"wss://mainnet.helius-rpc.com/?api-key={HELIUS_API_KEY}" if HELIUS_API_KEY else None
+)
 
 
 class WalletStalker:
